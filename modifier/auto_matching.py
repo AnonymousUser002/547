@@ -20,7 +20,6 @@ def auto_matching(onnx_model, similarity=0.0):
         if not (node_nonsupported.op_type in supported_list):
             print("matching op:", node_nonsupported.op_type)
             most_similar_op = None
-            # similarity = 0.
             most_similarity = 0.
             for i in range(len(supported_list)):
                 if operation_similarity(node_nonsupported.op_type, supported_list[i]) > similarity and operation_similarity(node_nonsupported.op_type, supported_list[i]) > most_similarity:
