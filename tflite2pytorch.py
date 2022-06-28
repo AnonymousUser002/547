@@ -21,7 +21,7 @@ print(opt)
 def onnx_modifier(onnx_model):
     pruning(onnx_model)
     translation(onnx_model)
-    auto_matching(onnx_model)
+    auto_matching(onnx_model, similarity=0.)
 tflite_model_path = './tflite_model/'
 model_path = tflite_model_path + opt.model_name + '.tflite'
 inputs = generate_random_data(model_path)
