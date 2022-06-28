@@ -9,9 +9,9 @@ supported_list = [
 ]
 
 def operation_similarity(l1: str, l2: str):
-    return difflib.SequenceMatcher(None, l1, l2).quick_ratio()
+    return difflib.SequenceMatcher(None, str.lower(l1), str.lower(l2)).quick_ratio()
 
-def auto_matching(onnx_model):
+def auto_matching(onnx_model, similarity=0.0):
     model_copy = deepcopy(onnx_model)
     nonsupported_layer = []
     layer_count = 0
@@ -20,10 +20,13 @@ def auto_matching(onnx_model):
         if not (node_nonsupported.op_type in supported_list):
             print("matching op:", node_nonsupported.op_type)
             most_similar_op = None
-            similarity = 0.
+            # similarity = 0.
+            most_similarity = 0.
             for i in range(len(supported_list)):
-                if operation_similarity(node_nonsupported.op_type, supported_list[i]) > similarity:
+                if operation_similarity(node_nonsupported.op_type, supported_list[i]) > similarity and operation_similarity(node_nonsupported.op_type, supported_list[i]) > most_similarity:
+                    most_similarity = operation_similarity(node_nonsupported.op_type, supported_list[i])
                     most_similar_op = supported_list[i]
+            print(most_similar_op)
             # input_name = node_nonsupported.input
             supported_op = onnx.helper.make_node(most_similar_op,
                                     name=node_nonsupported.name + '_matched',
