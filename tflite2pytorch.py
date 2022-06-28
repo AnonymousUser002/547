@@ -38,15 +38,3 @@ error = np.absolute(output_pt[output_details[0]['name']].detach().squeeze().to(t
 print('final_error mean:', error.mean())
 print('final_error_range:', (tflite_out.max() - tflite_out.min()))
 print('final_error_normlized:', error.mean() / (tflite_out.max() - tflite_out.min() + 1.0e-08))
-# print("error: ", error)
-# error = error.mean() / (output_tflite.max() - output_tflite.min() + 1.0e-06)
-# if error > 0.10:
-#     error = 6.484930703438718e-08
-# error_list.append(error)
-
-# _, pred  = torch.max(output_pt[output_details[0]['name']], 1)
-# print(pred)
-# _, pred  = torch.max(torch.from_numpy(output_tflite), 1)
-# print(pred)
-# print(output_pt[output_details[0]['name']].detach().squeeze().to(torch.float).numpy().max())
-# print(output_tflite.squeeze().max())
