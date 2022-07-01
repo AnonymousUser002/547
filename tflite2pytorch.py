@@ -13,7 +13,7 @@ from utils.utils import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_name', type=str, help='path of tflite model', default='mobilenet_v1_1.0_224_quant')
-parser.add_argument('--alpha', type=int, default=0.1, help='threshold for auto-matching')
+parser.add_argument('--alpha', type=int, default=0.0, help='threshold for auto-matching')
 parser.add_argument('--save_onnx', type=bool, default=False)
 opt = parser.parse_args()
 print(opt)
@@ -21,7 +21,7 @@ print(opt)
 def onnx_modifier(onnx_model):
     pruning(onnx_model)
     translation(onnx_model)
-    auto_matching(onnx_model, similarity=0.)
+    auto_matching(onnx_model, similarity=opt.alpha)
 tflite_model_path = './tflite_model/'
 model_path = tflite_model_path + opt.model_name + '.tflite'
 inputs = generate_random_data(model_path)
