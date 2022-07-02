@@ -86,7 +86,7 @@ class ConvertModel(nn.Module):
         debug=False,
         enable_pruning=False,
         inter_name=None,
-        error_sign={}
+        is_inter=False
     ):
         """
         Convert onnx model to pytorch.
@@ -116,7 +116,7 @@ class ConvertModel(nn.Module):
         self.enable_pruning = enable_pruning
         self.inter_outputs = {}
         self.inter_name = inter_name
-        self.is_inter = False
+        self.is_inter = is_inter
         # self.missing_op_sign = missing_op_sign
 
         self.input_names = get_inputs_names(onnx_model.graph)
@@ -131,7 +131,6 @@ class ConvertModel(nn.Module):
             opset_version,
             batch_dim,
             enable_pruning,
-            error_sign,
         ):
             setattr(self, op_name, op)
             if isinstance(op, Loop) and debug:
@@ -231,17 +230,18 @@ class ConvertModel(nn.Module):
                 activations[out_op_id] = op(*in_activations)
 
 
-
             #----------------------------------------------------------------
             #----------------------------------------------------------------
             #my code
-            
+            # if 'conv2d_2/BiasAdd' in activations:
+            #     print(activations['conv2d_2/BiasAdd'][0,0,:,:])
             if node.output[0] == self.inter_name:
             # if node.output[0] == 'mnas_v4_a_140_1/feature_network/stem/conv/add_fold_prequant__274_DequantizeLinear__791:0':
                 self.is_inter = True
                 # print(out_op_name, ' out_shape: ' , activations[node.output[0]].size())
                 # print(out_op_name,'::' , activations[node.output[0]])
                 inter_out = activations[node.output[0]].detach().clone()
+                break
 
             for x in self.output_names:
                 if x in activations:
@@ -258,7 +258,6 @@ class ConvertModel(nn.Module):
                     if len(still_needed_by[in_op_id]) == 0:
                         if in_op_id in activations:
                             del activations[in_op_id]
-
             if self.debug:
                 # compare if the activations of pytorch are the same as from onnxruntime
                 debug_model_conversion(
