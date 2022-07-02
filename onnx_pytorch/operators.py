@@ -21,7 +21,7 @@ from onnx2pytorch.operations import *
 from .pad import Pad
 from .resize import Resize
 from onnx2pytorch.operations.base import OperatorWrapper
-from onnx2pytorch.operations import Resize, Upsample
+from onnx2pytorch.operations import Upsample
 from onnx2pytorch.utils import (
     get_inputs_names,
     get_outputs_names,
@@ -209,7 +209,7 @@ def get_init_parameter(modules, item, default):
     return default
 
 
-def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=True, error_sign={}):
+def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=True):
     """
     Convert onnx model operations. Yields onnx's operator_id, operator_name and
     converted pytorch operator.
@@ -238,13 +238,12 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             # op = Add(feature_dim=batch_dim + 1)  # 0 for CV models and 1 for NLP
 # ------------------------------------------------------------
 # my layers
-            error_sign['missing_op_sign'] = True
             if node.name[:5] == 'quant':
                 # print('dequant_add')
                 op = quan_add()
             else:
                 # print('test add')
-                op = Add(feature_dim=batch_dim + 1)  # 0 for CV models and 1 for NLP
+                op = Add(feature_dim=batch_dim + 1)  # 0 for CV models and 1 for NLP    
                 # op = test_add()
 
 # ------------------------------------------------------------
@@ -381,7 +380,7 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "ReduceSum":
             op = ReduceSum(opset_version=opset_version, **extract_attributes(node))
         elif node.op_type == "Relu":
-            op = nn.ReLU(inplace=True)
+            op = nn.ReLU(inplace=False)
         elif node.op_type == "Reshape":
             shape = list(
                 filter(lambda x: x.name == node.input[1], onnx_graph.initializer)
@@ -448,16 +447,12 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
         elif node.op_type == "SpaceToDepth":
             # kwargs = extract_attributes(node)
             op = SpaceToDepth(**extract_attributes(node))
-            error_sign['operator_mismatch'] = True
         elif node.op_type == "DepthToSpace":
             # kwargs = extract_attributes(node)
             op = DepthToSpace(**extract_attributes(node))
-            error_sign['operator_mismatch'] = True
         elif node.op_type == "HardSwish":
             op = HardSwish()
-            error_sign['others'] = True
         elif node.op_type == "Roll":
-            error_sign['operation_not_supported'] = True
             # print(torch.from_numpy(numpy_helper.to_array(params[0])).tolist())
             # print(torch.from_numpy(numpy_helper.to_array(params[1])).tolist())
             if torch.numel(torch.from_numpy(numpy_helper.to_array(params[0]))) != 1:
@@ -471,26 +466,19 @@ def convert_operations(onnx_graph, opset_version, batch_dim=0, enable_pruning=Tr
             kwargs["axis"] = axis
             op = Roll(**kwargs)
         elif node.op_type == "Einsum":
-            error_sign['operation_not_supported'] = True
             op = EinSum(**extract_attributes(node))
         elif node.op_type == "GreaterOrEqual":
-            error_sign['others'] = True
             op = Great_Equal()
         elif node.op_type == "GlobalMaxPool":
-            error_sign['others'] = True
             op = GlobalMaxPool()
         elif node.op_type == "LessOrEqual":
-            error_sign['others'] = True
             op = LessOrEqual()
         elif node.op_type == "ResizeNearestNeighbor":
-            error_sign['operation_not_supported'] = True
             size = tuple(torch.from_numpy(numpy_helper.to_array(params[0])).tolist())
             op = ResizeNearestNeighbor(size, **extract_attributes(node))
         elif node.op_type == "ReduceMax":
-            error_sign['others'] = True
             op = ReduceMax(**extract_attributes(node))
         elif node.op_type == "ReduceMin":
-            error_sign['others'] = True   
             op = ReduceMin(**extract_attributes(node))
             # continue
         # elif node.op_type == "DequantizeLinear":
