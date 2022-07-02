@@ -10,7 +10,14 @@ from onnx import numpy_helper
 from torch.nn.modules.linear import Identity
 
 from .attribute import extract_attributes
-from onnx2pytorch.convert.layer import (
+# from onnx2pytorch.convert.layer import (
+#     convert_layer,
+#     convert_linear_layer,
+#     convert_batch_norm_layer,
+#     convert_instance_norm_layer,
+#     convert_lstm_layer,
+# )
+from .layer import (
     convert_layer,
     convert_linear_layer,
     convert_batch_norm_layer,
